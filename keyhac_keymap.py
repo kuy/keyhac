@@ -971,7 +971,7 @@ class Keymap(ckit.TextWindow):
                 if type(item)==str:
                     self.setInput_FromString(item)
                 else:
-                    raise TypeError;
+                    raise TypeError
 
             self.endInput()
 
@@ -1609,7 +1609,7 @@ class Keymap(ckit.TextWindow):
                 if type(item)==str:
                     self.setInput_FromString(item)
                 else:
-                    raise TypeError;
+                    raise TypeError
 
             self.endInput()
 
