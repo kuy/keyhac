@@ -733,6 +733,7 @@ class Keymap(ckit.TextWindow):
         self.current_map = {}                   # 現在フォーカスされているウインドウで有効なキーマップ
         self.vk_mod_map = {}                    # モディファイアキーの仮想キーコードとビットのテーブル
         self.vk_vk_map = {}                     # キーの置き換えテーブル
+        self.vk_cond_map = {}
         self.focus = None                       # 現在フォーカスされているUI要素
         self.focus_change_count = None          # フォーカス変更検出用のカウント
         self.modifier = 0                       # 押されているモディファイアキーのビットの組み合わせ
@@ -871,6 +872,7 @@ class Keymap(ckit.TextWindow):
         self.current_map = {}
         self.vk_mod_map = {}
         self.vk_vk_map = {}
+        self.vk_cond_map = {}
         self.modifier = 0
 
         self.vk_mod_map[VK_LSHIFT   ] = MODKEY_SHIFT_L
@@ -995,6 +997,20 @@ class Keymap(ckit.TextWindow):
                 return
             self.record_seq.append( ( vk, up ) )
 
+    def _getFocusedApplicationName(self):
+        pid = self.getFocusedApplicationPid()
+        if pid==None:
+            return None
+        else:
+            return ckit.getApplicationNameByPid(pid)
+
+    def _isMatchFocusedApplicationName( self, app_name ):
+        focused = self._getFocusedApplicationName()
+        if focused==None:
+            return False
+        else:
+            return fnmatch.fnmatch( focused, app_name )
+
     def _onKeyDown( self, vk ):
 
         if ckit.platform()=="win":
@@ -1012,8 +1028,17 @@ class Keymap(ckit.TextWindow):
         self._recordKey( vk, False )
 
         try:
-            vk = self.vk_vk_map[vk]
-            replaced = True
+            new_vk = self.vk_vk_map[vk]
+            try:
+                cond = self.vk_cond_map[vk]
+            except KeyError:
+                cond = True
+
+            if cond==True or not self._isMatchFocusedApplicationName(cond):
+                vk = new_vk
+                replaced = True
+            else:
+                replaced = False
         except KeyError:
             replaced = False
 
@@ -1067,8 +1092,17 @@ class Keymap(ckit.TextWindow):
         self._recordKey( vk, True )
 
         try:
-            vk = self.vk_vk_map[vk]
-            replaced = True
+            new_vk = self.vk_vk_map[vk]
+            try:
+                cond = self.vk_cond_map[vk]
+            except KeyError:
+                cond = True
+
+            if cond==True or not self._isMatchFocusedApplicationName(cond):
+                vk = new_vk
+                replaced = True
+            else:
+                replaced = False
         except KeyError:
             replaced = False
 
@@ -1222,7 +1256,7 @@ class Keymap(ckit.TextWindow):
     #
     #  src と dst には、"Space" や "Left" のような文字列形式の識別子か、仮想キーコードを数値で渡します。
     #
-    def replaceKey( self, src, dst ):
+    def replaceKey( self, src, dst, cond=None ):
         try:
             if type(src)==str:
                 src = KeyCondition.strToVk(src)
@@ -1238,6 +1272,8 @@ class Keymap(ckit.TextWindow):
             return
 
         self.vk_vk_map[src] = dst
+        if cond!=None:
+            self.vk_cond_map[src] = cond
 
     ## ユーザモディファイアキーを定義する
     #
