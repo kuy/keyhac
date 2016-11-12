@@ -1249,6 +1249,7 @@ class Keymap(ckit.TextWindow):
     #  @param self -
     #  @param src  置き換え前のキー
     #  @param dst  置き換え後のキー
+    #  @param cond 置き換えの条件。置き換えを無効にしたいアプリケーション名。
     #
     #  引数 src で指定されたキー入力を、引数 dst で指定されたキーの入力として扱うよう指示します。\n
     #  この置き換え処理は、Keyhac のキー処理の、もっとも早い段階で行われますので、
